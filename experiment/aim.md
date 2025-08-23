@@ -1,3 +1,1 @@
-## Aim of the experiment
-
-To understand the concept of Byzantine failures in distributed systems and how they can be tolerated using algorithms like Practical Byzantine Fault Tolerance (PBFT). This experiment will demonstrate how a consensus can be reached among nodes even when some of them are faulty or malicious.
+### To understand the concept of Byzantine failures in distributed systems and how they can be tolerated using algorithms like Practical Byzantine Fault Tolerance (PBFT). This experiment will demonstrate how a consensus can be reached among nodes even when some of them are faulty or malicious.

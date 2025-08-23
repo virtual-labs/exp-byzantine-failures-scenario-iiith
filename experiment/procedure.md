@@ -1,4 +1,4 @@
-## Procedure
+### Procedure
 
 This experiment simulates a distributed system with a set of nodes that need to agree on a common value. Some of these nodes can be Byzantine, meaning they can behave maliciously.
 
