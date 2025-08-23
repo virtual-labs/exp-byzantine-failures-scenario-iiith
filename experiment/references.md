@@ -1,3 +1,3 @@
 ### Castro, M., & Liskov, B. (1999). Practical Byzantine Fault Tolerance. In *Proceedings of the Third Symposium on Operating Systems Design and Implementation (OSDI '99)*.
 ### Lamport, L., Shostak, R., & Pease, M. (1982). The Byzantine Generals Problem. *ACM Transactions on Programming Languages and Systems (TOPLAS)*, 4(3), 382-401.
-### Wikipedia: Byzantine Fault. [https://en.wikipedia.org/wiki/Byzantine_fault] (https://en.wikipedia.org/wiki/Byzantine_fault)
+### Wikipedia: [Byzantine Fault] (https://en.wikipedia.org/wiki/Byzantine_fault)
