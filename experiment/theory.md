@@ -1,5 +1,3 @@
-## Theory
-
 ### Introduction to Distributed Systems
 
 A distributed system is a collection of independent computers that appears to its users as a single coherent system. These computers, often called nodes, communicate with each other by passing messages to coordinate their actions. Distributed systems are designed to be reliable, scalable, and efficient. However, they are also susceptible to various types of failures.

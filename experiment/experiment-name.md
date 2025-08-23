@@ -1,3 +1,1 @@
-## Experiment name
-
-Understanding Byzantine Failures in Distributed Systems
+## Understanding Byzantine Failures in Distributed Systems
