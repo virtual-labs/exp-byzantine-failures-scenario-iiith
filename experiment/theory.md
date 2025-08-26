@@ -1,8 +1,8 @@
-### Introduction to Distributed Systems
+Introduction to Distributed Systems
 
 A distributed system is a collection of independent computers that appears to its users as a single coherent system. These computers, often called nodes, communicate with each other by passing messages to coordinate their actions. Distributed systems are designed to be reliable, scalable, and efficient. However, they are also susceptible to various types of failures.
 
-### Types of Failures in Distributed Systems
+Types of Failures in Distributed Systems
 
 Failures in distributed systems can be broadly categorized as:
 
@@ -11,7 +11,7 @@ Failures in distributed systems can be broadly categorized as:
 3.  **Timing Failures:** A component's response time is outside the specified time interval.
 4.  **Byzantine Failures:** This is the most severe type of failure. A component can behave arbitrarily and maliciously. It might send conflicting information to different parts of the system, corrupt data, or appear to be working correctly to some nodes while appearing to have failed to others.
 
-### The Byzantine Generals' Problem
+The Byzantine Generals' Problem
 
 The Byzantine Generals' Problem is a classic thought experiment that illustrates the challenge of achieving consensus in a distributed system in the presence of Byzantine failures. The problem is described as follows:
 
@@ -21,7 +21,7 @@ The loyal generals must all agree on the same plan of action (e.g., "attack" or 
 
 The problem highlights that for a system with `n` generals, of which `t` are traitors, a solution can be found only if `n > 3t`. In other words, more than two-thirds of the components must be honest for the system to be able to reach a consensus.
 
-### Byzantine Fault Tolerance (BFT)
+Byzantine Fault Tolerance (BFT)
 
 Byzantine Fault Tolerance (BFT) is the property of a system that allows it to tolerate Byzantine failures. BFT algorithms are designed to achieve consensus and maintain correct operation even when some components are behaving maliciously.
 
@@ -35,7 +35,7 @@ One of the first and most famous BFT algorithms is the **Practical Byzantine Fau
 
 The client waits for `t + 1` identical replies from different nodes before accepting the result. This ensures that the result is valid even if `t` nodes are faulty.
 
-### Relevance in Modern Systems
+Relevance in Modern Systems
 
 Byzantine failures are a significant concern in modern distributed systems, especially in areas like:
 
