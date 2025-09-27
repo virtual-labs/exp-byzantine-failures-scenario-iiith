@@ -110,7 +110,7 @@ class ByzantineSimulation {
         this.currentPhase = 'idle';
         this.isRunning = false;
 
-        // Create nodes with random initial values
+        // Create nodes with initial values (not displayed initially)
         for (let i = 0; i < nodeCount; i++) {
             this.nodes.push({
                 id: i,
@@ -118,7 +118,13 @@ class ByzantineSimulation {
                 type: 'honest',
                 value: Math.floor(Math.random() * 2),
                 proposedValue: null,
-                receivedProposals: [],
+                prepareMessages: [],
+                commitMessages: [],
+                preparedValue: null,
+                committedValue: null,
+                receivedValue: null,
+                sentValue: null,
+                phase: 'idle',
                 pulse: 0
             });
         }
@@ -138,7 +144,8 @@ class ByzantineSimulation {
             const randomLeaderIndex = Math.floor(Math.random() * honestNodes.length);
             const leaderNode = honestNodes[randomLeaderIndex];
             leaderNode.type = 'leader';
-            this.log(`Leader randomly assigned: Node ${leaderNode.id}`, 'consensus');
+            leaderNode.value = 0; // Leader always proposes value 0
+            this.log(`Leader randomly assigned: Node ${leaderNode.id} (will propose value 0)`, 'consensus');
         } else {
             this.log('Warning: No honest nodes available for leader selection!', 'failure');
         }
@@ -199,7 +206,13 @@ class ByzantineSimulation {
         this.nodes.forEach(node => {
             node.type = 'honest';
             node.proposedValue = null;
-            node.receivedProposals = [];
+            node.prepareMessages = [];
+            node.commitMessages = [];
+            node.preparedValue = null;
+            node.committedValue = null;
+            node.receivedValue = null;
+            node.sentValue = null;
+            node.phase = 'idle';
             node.pulse = 0;
         });
 
@@ -218,7 +231,8 @@ class ByzantineSimulation {
             const randomLeaderIndex = Math.floor(Math.random() * honestNodes.length);
             const leaderNode = honestNodes[randomLeaderIndex];
             leaderNode.type = 'leader';
-            this.log(`Reassigned leader: Node ${leaderNode.id}`, 'consensus');
+            leaderNode.value = 0; // Leader always proposes value 0
+            this.log(`Reassigned leader: Node ${leaderNode.id} (will propose value 0)`, 'consensus');
         } else {
             this.log('Warning: No honest nodes available for leader selection!', 'failure');
         }
@@ -240,7 +254,7 @@ class ByzantineSimulation {
         console.log(`Current state: manualStep=${this.manualStep}, currentPhase=${this.currentPhase}, isRunning=${this.isRunning}`);
         
         // If consensus is complete, reset for new consensus
-        if (this.currentPhase === 'decision' && !this.isRunning) {
+        if (this.currentPhase === 'commit' && !this.isRunning) {
             this.manualStep = 0;
             this.currentPhase = 'idle';
             this.updatePhaseIndicator();
@@ -266,7 +280,7 @@ class ByzantineSimulation {
             
             this.isRunning = true;
             this.consensusRound++;
-            this.log('Starting manual consensus round ' + this.consensusRound, 'consensus');
+            this.log('Starting manual PBFT consensus round ' + this.consensusRound, 'consensus');
             this.resetNodeStates();
         }
 
@@ -277,19 +291,19 @@ class ByzantineSimulation {
             console.log(`Manual step: ${this.manualStep}, Current phase: ${this.currentPhase}`);
             switch (this.manualStep) {
                 case 0:
-                    await this.manualPhase1Proposal();
+                    await this.manualPhase1PrePrepare();
                     break;
                 case 1:
-                    await this.manualPhase2Voting();
+                    await this.manualPhase2Prepare();
                     break;
                 case 2:
-                    await this.manualPhase3Decision();
+                    await this.manualPhase3Commit();
                     break;
             }
             this.manualStep++;
             console.log(`After increment, manual step: ${this.manualStep}`);
             
-            // Only set isRunning to false for the final step (decision phase)
+            // Only set isRunning to false for the final step (commit phase)
             if (this.manualStep > 2) {
                 this.isRunning = false;
             }
@@ -301,43 +315,219 @@ class ByzantineSimulation {
         }
     }
 
-    async manualPhase1Proposal() {
-        this.currentPhase = 'proposal';
+    async manualPhase1PrePrepare() {
+        this.currentPhase = 'pre-prepare';
         this.updatePhaseIndicator();
         
         const leader = this.nodes.find(node => node.type === 'leader');
         leader.proposedValue = leader.value;
+        leader.phase = 'pre-prepare';
         leader.pulse = 1;
         
-        this.log(`Phase 1: Leader ${leader.id} proposes value ${leader.proposedValue}`, 'consensus');
+        this.log(`Phase 1 (Pre-Prepare): Leader ${leader.id} proposes value ${leader.proposedValue}`, 'consensus');
         
-        // Send proposal to all nodes
-        this.broadcastMessage(leader, leader.proposedValue, 'proposal');
+        // Leader broadcasts pre-prepare message to all replicas
+        this.nodes.forEach(replica => {
+            if (replica.id !== leader.id) {
+                replica.proposedValue = leader.proposedValue; // All nodes receive the proposal
+                replica.receivedValue = leader.proposedValue; // Track what they received
+                this.messages.push({
+                    from: leader.id,
+                    to: replica.id,
+                    value: leader.proposedValue,
+                    type: 'pre-prepare',
+                    startTime: Date.now(),
+                    duration: 1000 / this.animationSpeed,
+                    progress: 0
+                });
+                this.messageCount++;
+            }
+        });
         
-        document.getElementById('nextStepBtn').textContent = '📝 Collect Votes';
+        document.getElementById('nextStepBtn').textContent = '� Prepare Phase';
     }
 
-    async manualPhase2Voting() {
-        console.log('Entering manualPhase2Voting()');
-        this.currentPhase = 'voting';
+    async manualPhase2Prepare() {
+        this.currentPhase = 'prepare';
         this.updatePhaseIndicator();
         
-        this.log('Phase 2: Nodes responding to proposal...', 'consensus');
+        this.log('Phase 2 (Prepare): Replicas broadcasting prepare messages...', 'consensus');
         
-        this.collectConsensus();
+        const leader = this.nodes.find(node => node.type === 'leader');
+        const proposedValue = leader.proposedValue;
+        
+        // Each replica (except leader) broadcasts prepare messages to all other nodes
+        this.nodes.forEach(sender => {
+            if (sender.id !== leader.id) {
+                sender.phase = 'prepare';
+                sender.pulse = 1;
+                
+                // Determine what message this node will send based on its type
+                let messageValue = proposedValue;
+                let messageType = 'prepare';
+                
+                if (sender.type === 'byzantine') {
+                    // Byzantine nodes always send value 1 (opposite of leader's 0)
+                    messageValue = 1;
+                    sender.sentValue = 1; // Track what Byzantine node sent
+                    this.log(`Byzantine node ${sender.id} sends malicious prepare: ${messageValue} (received ${sender.receivedValue})`, 'failure');
+                } else {
+                    // Honest nodes send prepare with the proposed value they received
+                    sender.sentValue = messageValue; // Track what honest node sent
+                    this.log(`Honest node ${sender.id} sends prepare: ${messageValue} (received ${sender.receivedValue})`, 'consensus');
+                }
+                
+                // Send prepare message to all other nodes
+                this.nodes.forEach(receiver => {
+                    if (receiver.id !== sender.id) {
+                        // Store prepare message in receiver
+                        if (!receiver.prepareMessages) receiver.prepareMessages = [];
+                        receiver.prepareMessages.push({
+                            from: sender.id,
+                            value: messageValue,
+                            type: 'prepare'
+                        });
+                        
+                        this.messages.push({
+                            from: sender.id,
+                            to: receiver.id,
+                            value: messageValue,
+                            type: 'prepare',
+                            startTime: Date.now(),
+                            duration: 1000 / this.animationSpeed,
+                            progress: 0
+                        });
+                        this.messageCount++;
+                    }
+                });
+            }
+        });
         
         // Wait for message animations to complete
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        document.getElementById('nextStepBtn').textContent = '✅ Final Decision';
+        document.getElementById('nextStepBtn').textContent = '✅ Commit Phase';
     }
 
-    async manualPhase3Decision() {
-        this.currentPhase = 'decision';
+    async manualPhase3Commit() {
+        this.currentPhase = 'commit';
         this.updatePhaseIndicator();
         
-        this.log('Phase 3: Making consensus decision...', 'consensus');
+        this.log('Phase 3 (Commit): Processing prepare messages and making decisions...', 'consensus');
         
+        const leader = this.nodes.find(node => node.type === 'leader');
+        const proposedValue = leader.proposedValue;
+        const totalNodes = this.nodes.length;
+        const byzantineCount = this.nodes.filter(n => n.type === 'byzantine').length;
+        const requiredPrepares = Math.floor((totalNodes + byzantineCount) / 2) + 1; // 2f + 1 prepare messages needed
+        
+        // Each node processes prepare messages and decides whether to commit
+        this.nodes.forEach(node => {
+            if (node.id !== leader.id) { // Replicas process prepare messages
+                node.phase = 'commit';
+                
+                // Count prepare messages for the proposed value
+                const preparesForValue = (node.prepareMessages || []).filter(msg => 
+                    msg.value === proposedValue && msg.type === 'prepare'
+                ).length;
+                
+                // Add leader's implicit prepare (leader doesn't send prepare to itself)
+                const totalPrepares = preparesForValue + 1;
+                
+                if (totalPrepares >= requiredPrepares) {
+                    node.preparedValue = proposedValue;
+                    node.pulse = 1;
+                    
+                    if (node.type === 'honest') {
+                        this.log(`Honest node ${node.id} received ${totalPrepares} prepares, entering commit phase`, 'consensus');
+                        
+                        // Honest node broadcasts commit message
+                        this.nodes.forEach(receiver => {
+                            if (receiver.id !== node.id) {
+                                if (!receiver.commitMessages) receiver.commitMessages = [];
+                                receiver.commitMessages.push({
+                                    from: node.id,
+                                    value: proposedValue,
+                                    type: 'commit'
+                                });
+                                
+                                this.messages.push({
+                                    from: node.id,
+                                    to: receiver.id,
+                                    value: proposedValue,
+                                    type: 'commit',
+                                    startTime: Date.now(),
+                                    duration: 1000 / this.animationSpeed,
+                                    progress: 0
+                                });
+                                this.messageCount++;
+                            }
+                        });
+                    } else if (node.type === 'byzantine') {
+                        // Byzantine nodes always send conflicting commit (value 1)
+                        const maliciousValue = 1;
+                        this.log(`Byzantine node ${node.id} sends conflicting commit: ${maliciousValue}`, 'failure');
+                        
+                        this.nodes.forEach(receiver => {
+                            if (receiver.id !== node.id) {
+                                if (!receiver.commitMessages) receiver.commitMessages = [];
+                                receiver.commitMessages.push({
+                                    from: node.id,
+                                    value: maliciousValue,
+                                    type: 'commit'
+                                });
+                                
+                                this.messages.push({
+                                    from: node.id,
+                                    to: receiver.id,
+                                    value: maliciousValue,
+                                    type: 'commit',
+                                    startTime: Date.now(),
+                                    duration: 1000 / this.animationSpeed,
+                                    progress: 0
+                                });
+                                this.messageCount++;
+                            }
+                        });
+                    }
+                } else {
+                    this.log(`Node ${node.id} received only ${totalPrepares} prepares (need ${requiredPrepares}), cannot proceed to commit`, 'message');
+                }
+            }
+        });
+        
+        // Process leader's commit decision
+        leader.phase = 'commit';
+        leader.preparedValue = proposedValue;
+        this.log(`Leader ${leader.id} enters commit phase for value ${proposedValue}`, 'consensus');
+        
+        // Leader also sends commit messages
+        this.nodes.forEach(receiver => {
+            if (receiver.id !== leader.id) {
+                if (!receiver.commitMessages) receiver.commitMessages = [];
+                receiver.commitMessages.push({
+                    from: leader.id,
+                    value: proposedValue,
+                    type: 'commit'
+                });
+                
+                this.messages.push({
+                    from: leader.id,
+                    to: receiver.id,
+                    value: proposedValue,
+                    type: 'commit',
+                    startTime: Date.now(),
+                    duration: 1000 / this.animationSpeed,
+                    progress: 0
+                });
+                this.messageCount++;
+            }
+        });
+        
+        // Wait for commit message animations
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Finalize consensus - check commit messages
         this.finalizeConsensus();
         
         this.isRunning = false;
@@ -348,7 +538,13 @@ class ByzantineSimulation {
     resetNodeStates() {
         this.nodes.forEach(node => {
             node.proposedValue = null;
-            node.receivedProposals = [];
+            node.prepareMessages = [];
+            node.commitMessages = [];
+            node.preparedValue = null;
+            node.committedValue = null;
+            node.receivedValue = null;
+            node.sentValue = null;
+            node.phase = 'idle';
             node.pulse = 0;
         });
     }
@@ -372,9 +568,9 @@ class ByzantineSimulation {
 
         // Only run automatic mode if not in manual mode
         if (this.simulationMode === 'automatic') {
-            this.executeNormalMode(leader);
+            this.executeAutomaticPBFT(leader);
         } else {
-            this.log('Use Next Step button for manual progression', 'message');
+            this.log('Manual PBFT mode: Click "Next Step" to progress through consensus phases', 'message');
             this.isRunning = false;
             return;
         }
@@ -383,31 +579,172 @@ class ByzantineSimulation {
         this.updatePhaseIndicator();
     }
 
-    executeNormalMode(leader) {
-        // Phase 1: Leader proposes value
+    executeAutomaticPBFT(leader) {
+        // Phase 1: Pre-Prepare - Leader proposes value
         setTimeout(() => {
-            this.currentPhase = 'proposal';
+            this.currentPhase = 'pre-prepare';
             this.updatePhaseIndicator();
-            const proposedValue = leader.value;
-            leader.proposedValue = proposedValue;
-            leader.pulse = 1;
-            this.log(`Leader ${leader.id} proposes value ${proposedValue}`, 'consensus');
-            this.broadcastMessage(leader, proposedValue, 'proposal');
+            leader.proposedValue = leader.value;
+            this.log(`Automatic PBFT Phase 1: Leader ${leader.id} pre-prepare with value ${leader.proposedValue}`, 'consensus');
+            
+            // Broadcast pre-prepare to all replicas
+            this.nodes.forEach(replica => {
+                if (replica.id !== leader.id) {
+                    replica.proposedValue = leader.proposedValue;
+                    this.messages.push({
+                        from: leader.id,
+                        to: replica.id,
+                        value: leader.proposedValue,
+                        type: 'pre-prepare',
+                        startTime: Date.now(),
+                        duration: 1000 / this.animationSpeed,
+                        progress: 0
+                    });
+                    this.messageCount++;
+                }
+            });
         }, 500);
 
-        // Phase 2: Nodes respond
+        // Phase 2: Prepare - Replicas exchange prepare messages
         setTimeout(() => {
-            this.currentPhase = 'voting';
+            this.currentPhase = 'prepare';
             this.updatePhaseIndicator();
-            this.collectConsensus();
-        }, 2000);
+            this.log('Automatic PBFT Phase 2: Replicas sending prepare messages', 'consensus');
+            
+            const proposedValue = leader.proposedValue;
+            this.nodes.forEach(sender => {
+                if (sender.id !== leader.id) {
+                    let messageValue = proposedValue;
+                    
+                    if (sender.type === 'byzantine') {
+                        const behavior = Math.random();
+                        if (behavior < 0.4) {
+                            messageValue = 1 - proposedValue;
+                            this.log(`Byzantine node ${sender.id} sends conflicting prepare: ${messageValue}`, 'failure');
+                        } else if (behavior < 0.7) {
+                            messageValue = Math.floor(Math.random() * 2);
+                            this.log(`Byzantine node ${sender.id} sends random prepare: ${messageValue}`, 'failure');
+                        } else {
+                            this.log(`Byzantine node ${sender.id} stays silent in prepare`, 'failure');
+                            return;
+                        }
+                    }
+                    
+                    // Send prepare to all other nodes
+                    this.nodes.forEach(receiver => {
+                        if (receiver.id !== sender.id) {
+                            if (!receiver.prepareMessages) receiver.prepareMessages = [];
+                            receiver.prepareMessages.push({
+                                from: sender.id,
+                                value: messageValue,
+                                type: 'prepare'
+                            });
+                            
+                            this.messages.push({
+                                from: sender.id,
+                                to: receiver.id,
+                                value: messageValue,
+                                type: 'prepare',
+                                startTime: Date.now(),
+                                duration: 1000 / this.animationSpeed,
+                                progress: 0
+                            });
+                            this.messageCount++;
+                        }
+                    });
+                }
+            });
+        }, 2500);
 
-        // Phase 3: Decision
+        // Phase 3: Commit - Nodes send commit messages
         setTimeout(() => {
-            this.currentPhase = 'decision';
+            this.currentPhase = 'commit';
             this.updatePhaseIndicator();
+            this.log('Automatic PBFT Phase 3: Processing prepares and sending commits', 'consensus');
+            
+            const proposedValue = leader.proposedValue;
+            const totalNodes = this.nodes.length;
+            const byzantineCount = this.nodes.filter(n => n.type === 'byzantine').length;
+            const requiredPrepares = Math.floor((totalNodes + byzantineCount) / 2) + 1;
+            
+            // All nodes (including leader) send commit messages
+            this.nodes.forEach(sender => {
+                let shouldCommit = true;
+                
+                if (sender.id !== leader.id) {
+                    // Check if replica received enough prepare messages
+                    const preparesForValue = (sender.prepareMessages || []).filter(msg => 
+                        msg.value === proposedValue && msg.type === 'prepare'
+                    ).length + 1; // +1 for leader's implicit prepare
+                    
+                    shouldCommit = preparesForValue >= requiredPrepares;
+                    
+                    if (!shouldCommit) {
+                        this.log(`Node ${sender.id} cannot commit (only ${preparesForValue} prepares)`, 'message');
+                        return;
+                    }
+                }
+                
+                if (sender.type === 'honest' || sender.type === 'leader') {
+                    // Send commit messages to all other nodes
+                    this.nodes.forEach(receiver => {
+                        if (receiver.id !== sender.id) {
+                            if (!receiver.commitMessages) receiver.commitMessages = [];
+                            receiver.commitMessages.push({
+                                from: sender.id,
+                                value: proposedValue,
+                                type: 'commit'
+                            });
+                            
+                            this.messages.push({
+                                from: sender.id,
+                                to: receiver.id,
+                                value: proposedValue,
+                                type: 'commit',
+                                startTime: Date.now(),
+                                duration: 1000 / this.animationSpeed,
+                                progress: 0
+                            });
+                            this.messageCount++;
+                        }
+                    });
+                } else if (sender.type === 'byzantine') {
+                    const behavior = Math.random();
+                    if (behavior < 0.5) {
+                        const maliciousValue = 1 - proposedValue;
+                        this.log(`Byzantine node ${sender.id} sends conflicting commit: ${maliciousValue}`, 'failure');
+                        
+                        this.nodes.forEach(receiver => {
+                            if (receiver.id !== sender.id) {
+                                if (!receiver.commitMessages) receiver.commitMessages = [];
+                                receiver.commitMessages.push({
+                                    from: sender.id,
+                                    value: maliciousValue,
+                                    type: 'commit'
+                                });
+                                
+                                this.messages.push({
+                                    from: sender.id,
+                                    to: receiver.id,
+                                    value: maliciousValue,
+                                    type: 'commit',
+                                    startTime: Date.now(),
+                                    duration: 1000 / this.animationSpeed,
+                                    progress: 0
+                                });
+                                this.messageCount++;
+                            }
+                        });
+                    }
+                }
+            });
+        }, 5000);
+
+        // Phase 4: Finalize consensus
+        setTimeout(() => {
+            this.log('Automatic PBFT Phase 4: Finalizing consensus', 'consensus');
             this.finalizeConsensus();
-        }, 4000);
+        }, 7500);
 
         // Reset phase
         setTimeout(() => {
@@ -415,7 +752,7 @@ class ByzantineSimulation {
             this.isRunning = false;
             this.updatePhaseIndicator();
             this.updateStatus();
-        }, 6000);
+        }, 9000);
     }
 
     broadcastMessage(sender, value, type) {
@@ -481,35 +818,62 @@ class ByzantineSimulation {
     finalizeConsensus() {
         const leader = this.nodes.find(node => node.type === 'leader');
         const proposedValue = leader.proposedValue;
+        const totalNodes = this.nodes.length;
+        const byzantineCount = this.nodes.filter(n => n.type === 'byzantine').length;
+        const requiredCommits = Math.floor((totalNodes + byzantineCount) / 2) + 1; // 2f + 1 commit messages needed
         
-        // Count votes
-        const votes = { 0: 0, 1: 0 };
-        const honestNodes = this.nodes.filter(node => node.type === 'honest' || node.type === 'leader');
+        this.log('Finalizing PBFT consensus...', 'consensus');
         
-        honestNodes.forEach(node => {
-            if (node.proposedValue !== null) {
-                votes[node.proposedValue]++;
+        // Check each node's commit messages to determine if consensus is reached
+        let consensusNodes = [];
+        
+        this.nodes.forEach(node => {
+            if (node.type === 'honest' || node.type === 'leader') {
+                // Count commit messages for the proposed value (including leader's implicit commit)
+                const commitMessagesForValue = (node.commitMessages || []).filter(msg => 
+                    msg.value === proposedValue && msg.type === 'commit'
+                ).length;
+                
+                // Add 1 for leader's implicit commit (if this node is not the leader)
+                const totalCommits = commitMessagesForValue + (node.id === leader.id ? 0 : 1);
+                
+                if (totalCommits >= requiredCommits) {
+                    node.committedValue = proposedValue;
+                    consensusNodes.push(node.id);
+                    this.log(`Node ${node.id} commits value ${proposedValue} (${totalCommits} commits received)`, 'consensus');
+                } else {
+                    this.log(`Node ${node.id} cannot commit (only ${totalCommits} commits, need ${requiredCommits})`, 'message');
+                }
             }
         });
-
-        const totalHonestNodes = honestNodes.length;
-        const byzantineNodes = this.nodes.filter(node => node.type === 'byzantine').length;
         
-        // Byzantine Agreement: Need majority of honest nodes
-        const consensusReached = this.validateConsensus(votes, totalHonestNodes);
+        const honestNodes = this.nodes.filter(n => n.type === 'honest' || n.type === 'leader');
+        const byzantineNodes = this.nodes.filter(n => n.type === 'byzantine');
         
-        if (consensusReached) {
-            const consensusValue = votes[0] > votes[1] ? 0 : 1;
-            this.log(`Consensus reached! Agreed value: ${consensusValue}`, 'consensus');
-            this.log(`Votes: 0=${votes[0]}, 1=${votes[1]} (${totalHonestNodes} honest nodes, ${byzantineNodes} Byzantine)`, 'consensus');
+        // PBFT consensus is reached if all honest nodes commit the same value
+        const consensusReached = consensusNodes.length === honestNodes.length;
+        
+        if (consensusReached && consensusNodes.length > 0) {
+            this.log(`🎉 PBFT Consensus REACHED! All ${consensusNodes.length} honest nodes agreed on value: ${proposedValue}`, 'consensus');
+            this.log(`✓ Pre-Prepare: Leader ${leader.id} proposed ${proposedValue}`, 'consensus');
+            this.log(`✓ Prepare: Nodes exchanged prepare messages`, 'consensus');
+            this.log(`✓ Commit: Nodes received sufficient commit messages (≥${requiredCommits})`, 'consensus');
+            this.log(`Network: ${totalNodes} total nodes (${honestNodes.length} honest, ${byzantineNodes.length} Byzantine)`, 'message');
         } else {
-            this.log(`Consensus failed! Insufficient honest node agreement`, 'failure');
-            this.log(`Votes: 0=${votes[0]}, 1=${votes[1]} (${totalHonestNodes} honest nodes, ${byzantineNodes} Byzantine)`, 'failure');
+            this.log(`❌ PBFT Consensus FAILED! Only ${consensusNodes.length}/${honestNodes.length} honest nodes could commit`, 'failure');
+            this.log(`Not enough commit messages received (need ${requiredCommits} commits)`, 'failure');
+            this.log(`Network: ${totalNodes} total nodes (${honestNodes.length} honest, ${byzantineNodes.length} Byzantine)`, 'failure');
         }
 
-        // Highlight all nodes briefly
-        this.nodes.forEach(node => {
-            node.pulse = 1;
+        // Highlight all nodes that reached consensus
+        consensusNodes.forEach(nodeId => {
+            const node = this.nodes.find(n => n.id === nodeId);
+            if (node) node.pulse = 1;
+        });
+        
+        // Also highlight Byzantine nodes to show their behavior
+        byzantineNodes.forEach(node => {
+            node.pulse = 0.5; // Different pulse for Byzantine nodes
         });
     }
 
@@ -623,9 +987,24 @@ class ByzantineSimulation {
             this.ctx.textAlign = 'center';
             this.ctx.fillText(node.id.toString(), x, y - 5);
             
-            // Draw value
-            this.ctx.font = 'bold 12px Arial';
-            this.ctx.fillText(`v:${node.value}`, x, y + 10);
+            // Draw node information based on phase
+            this.ctx.font = 'bold 10px Arial';
+            if (this.currentPhase === 'idle' || node.phase === 'idle') {
+                // Initially show nothing (just node number)
+            } else if (this.currentPhase === 'pre-prepare' && node.receivedValue !== null) {
+                // After pre-prepare phase, show what they received
+                this.ctx.fillText(`R:${node.receivedValue}`, x, y + 8);
+            } else if (this.currentPhase === 'prepare' && node.sentValue !== null) {
+                // During/after prepare phase, show received and sent values
+                this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + 8);
+            } else if (this.currentPhase === 'commit') {
+                // During commit phase, show the full story
+                if (node.receivedValue !== null && node.sentValue !== null) {
+                    this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + 8);
+                } else if (node.receivedValue !== null) {
+                    this.ctx.fillText(`R:${node.receivedValue}`, x, y + 8);
+                }
+            }
             
             // Animate pulse
             if (node.pulse > 0) {
@@ -648,9 +1027,9 @@ class ByzantineSimulation {
         
         const phaseText = {
             'idle': 'Ready',
-            'proposal': 'Phase 1: Leader Proposal',
-            'voting': 'Phase 2: Node Responses',
-            'decision': 'Phase 3: Consensus Decision'
+            'pre-prepare': 'Phase 1: Pre-Prepare (Leader Proposal)',
+            'prepare': 'Phase 2: Prepare (Replica Validation)', 
+            'commit': 'Phase 3: Commit (Final Agreement)'
         };
 
         let displayText = phaseText[this.currentPhase] || 'Ready';
@@ -678,9 +1057,9 @@ class ByzantineSimulation {
 
         const phaseNames = {
             'idle': 'Idle',
-            'proposal': 'Leader Proposal',
-            'voting': 'Node Voting',
-            'decision': 'Making Decision'
+            'pre-prepare': 'Pre-Prepare',
+            'prepare': 'Prepare',
+            'commit': 'Commit'
         };
 
         document.getElementById('networkStatus').textContent = statusText;

@@ -82,20 +82,16 @@
                     <h4>Node Types</h4>
                     <div class="legend-items">
                         <div class="legend-item">
+                            <div class="legend-color leader"></div>
+                            <span>Leader Node</span>
+                        </div>
+                        <div class="legend-item">
                             <div class="legend-color honest"></div>
                             <span>Honest Node</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color byzantine"></div>
                             <span>Byzantine Node</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color leader"></div>
-                            <span>Leader Node</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color offline"></div>
-                            <span>Offline Node</span>
                         </div>
                     </div>
                 </div>
@@ -191,38 +187,43 @@
                 <div class="feature-section">
                     <h3>🔍 Understanding Node Types</h3>
                     <ul>
-                        <li><strong>🟢 Honest Node (Green):</strong> Follows the consensus protocol correctly, always tells the truth.</li>
-                        <li><strong>🔴 Byzantine Node (Red):</strong> Malicious node that may lie, send conflicting messages, or remain silent.</li>
-                        <li><strong>🟡 Leader Node (Gold):</strong> Initiates consensus by proposing a value. Must be an honest node.</li>
-                        <li><strong>⚫ Offline Node (Gray):</strong> Currently not used, but represents crashed/unreachable nodes.</li>
+                        <li><strong>� Leader Node (Gold):</strong> Initiates consensus by proposing a value (Pre-Prepare phase). Must be an honest node.</li>
+                        <li><strong>� Honest Node (Green):</strong> Follows the PBFT protocol correctly, validates messages, and helps achieve consensus.</li>
+                        <li><strong>� Byzantine Node (Red):</strong> Malicious node that may send conflicting messages, lie, or remain silent to disrupt consensus.</li>
                         <li><strong>Node Values:</strong> Each node starts with a random binary value (0 or 1) that they want the network to agree on.</li>
+                        <li><strong>Message Types:</strong> Pre-Prepare (leader proposal), Prepare (replica validation), Commit (final agreement).</li>
                     </ul>
                 </div>
 
                 <div class="feature-section">
-                    <h3>📋 Byzantine Agreement Process</h3>
+                    <h3>📋 PBFT Consensus Protocol</h3>
+                    <p>This simulation implements the <strong>Practical Byzantine Fault Tolerance (PBFT)</strong> consensus algorithm with three distinct phases:</p>
                     <ol>
-                        <li><strong>Phase 1 - Leader Proposal:</strong>
+                        <li><strong>Phase 1 - Pre-Prepare:</strong>
                             <ul>
-                                <li>Leader broadcasts its proposed value to all nodes</li>
-                                <li>All nodes receive the proposal (shown as moving messages)</li>
+                                <li>Leader broadcasts a pre-prepare message with the proposed value to all replica nodes</li>
+                                <li>All replicas receive the same proposal from the leader</li>
+                                <li>This establishes the initial proposal for this consensus round</li>
                             </ul>
                         </li>
-                        <li><strong>Phase 2 - Node Responses:</strong>
+                        <li><strong>Phase 2 - Prepare:</strong>
                             <ul>
-                                <li>Each node responds with their vote (accept/reject proposal)</li>
-                                <li>Honest nodes follow protocol rules</li>
-                                <li>Byzantine nodes may send conflicting or false responses</li>
+                                <li>Each replica broadcasts prepare messages to all other nodes (including the leader)</li>
+                                <li>Honest replicas send prepare messages with the leader's proposed value</li>
+                                <li>Byzantine replicas may send conflicting prepare messages or stay silent</li>
+                                <li>Nodes collect prepare messages to verify network agreement on the proposal</li>
                             </ul>
                         </li>
-                        <li><strong>Phase 3 - Final Decision:</strong>
+                        <li><strong>Phase 3 - Commit:</strong>
                             <ul>
-                                <li>Leader counts votes from all responses</li>
-                                <li>Consensus reached if majority of honest nodes agree</li>
-                                <li>Result announced to network</li>
+                                <li>Nodes that received ≥ 2f+1 prepare messages (including leader's implicit prepare) enter commit phase</li>
+                                <li>These nodes broadcast commit messages for the agreed value</li>
+                                <li>Byzantine nodes may send conflicting commits or remain silent</li>
+                                <li>Final consensus is reached when nodes receive ≥ 2f+1 commit messages</li>
                             </ul>
                         </li>
                     </ol>
+                    <p><strong>Safety Guarantee:</strong> All honest nodes that commit will commit the same value, even with up to f Byzantine nodes (where f < n/3).</p>
                 </div>
 
                 <div class="feature-section">
