@@ -2,38 +2,157 @@
   "version": 2.0,
   "questions": [
     {
-      "question": "This is a Sample Question 1?",
+      "question": "In a distributed system, what is a 'node'?",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "A type of network cable.",
+        "b": "An independent computer within the system.",
+        "c": "A user of the system.",
+        "d": "A software bug."
       },
       "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+        "a": "Incorrect. A node is a computer, not a cable.",
+        "b": "Correct. Nodes are the individual computers that make up a distributed system.",
+        "c": "Incorrect. A user interacts with the system, but is not a node.",
+        "d": "Incorrect. A bug is a software flaw, not a component of the system's architecture."
       },
-      "correctAnswer": "a",
+      "correctAnswer": "b",
       "difficulty": "beginner"
     },
     {
-      "question": "This is a Sample Question 2?",
+      "question": "Which of these is NOT a primary category of failure in distributed systems?",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "Crash Failure",
+        "b": "Cosmetic Failure",
+        "c": "Omission Failure",
+        "d": "Byzantine Failure"
       },
       "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+        "a": "Incorrect. Crash failure is a primary category.",
+        "b": "Correct. Cosmetic failures, such as a UI glitch, are not considered a primary category of system failure in this context.",
+        "c": "Incorrect. Omission failure is a primary category.",
+        "d": "Incorrect. Byzantine failure is a primary category."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What does it mean for a Byzantine node to behave 'arbitrarily'?",
+      "answers": {
+        "a": "It always crashes.",
+        "b": "It can do anything, including sending wrong or conflicting information.",
+        "c": "It only sends messages late.",
+        "d": "It stops sending messages."
+      },
+      "explanations": {
+        "a": "Incorrect. This describes a crash failure.",
+        "b": "Correct. Arbitrary behavior means the node is not constrained and can act maliciously in unpredictable ways.",
+        "c": "Incorrect. This describes a timing failure.",
+        "d": "Incorrect. This describes an omission failure."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In the PBFT algorithm, what is the purpose of the 'prepare' phase?",
+      "answers": {
+        "a": "The client prepares a request to send.",
+        "b": "The primary node prepares to send the request to backups.",
+        "c": "Backup nodes broadcast their agreement on the request's sequence number.",
+        "d": "The client prepares to receive the final reply."
+      },
+      "explanations": {
+        "a": "Incorrect. The client simply sends the request.",
+        "b": "Incorrect. This happens in the 'pre-prepare' phase.",
+        "c": "Correct. During the prepare phase, backup nodes validate the request from the primary and broadcast a 'prepare' message to other nodes, signaling they are ready to commit.",
+        "d": "Incorrect. The client waits for replies after the 'commit' phase."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "If a BFT system has 7 nodes in total, what is the maximum number of Byzantine nodes it can tolerate?",
+      "answers": {
+        "a": "1",
+        "b": "2",
+        "c": "3",
+        "d": "4"
+      },
+      "explanations": {
+        "a": "Incorrect. The system can tolerate more.",
+        "b": "Correct. Using the formula n > 3t, if n=7, the largest integer 't' that satisfies the condition is 2 (since 7 > 3*2, which is 7 > 6).",
+        "c": "Incorrect. If t=3, then n must be greater than 9.",
+        "d": "Incorrect. If t=4, then n must be greater than 12."
+      },
+      "correctAnswer": "b",
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "Why is the condition n > 3t necessary for Byzantine fault tolerance?",
+      "answers": {
+        "a": "To ensure messages are delivered quickly.",
+        "b": "To ensure that after the 't' traitors send their messages, the remaining loyal nodes have a majority.",
+        "c": "It's an arbitrary number chosen by researchers.",
+        "d": "To make the system more expensive to build."
+      },
+      "explanations": {
+        "a": "Incorrect. The condition is about correctness, not speed.",
+        "b": "Correct. This condition ensures that the number of loyal nodes (n-t) is more than double the number of traitors (2t). This allows the loyal nodes to outvote the traitors and any conflicting information they might send.",
+        "c": "Incorrect. The number is derived from the logic of the Byzantine Generals' Problem.",
+        "d": "Incorrect. While it does increase cost, that is not the reason for the condition."
+      },
+      "correctAnswer": "b",
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "In the context of PBFT, what does the 'commit' phase signify?",
+      "answers": {
+        "a": "A node has received the client's request.",
+        "b": "A node has prepared the message.",
+        "c": "A node has received enough 'prepare' messages to be certain that a sufficient number of other nodes agree on the request.",
+        "d": "The client has committed the result to its local storage."
+      },
+      "explanations": {
+        "a": "Incorrect. This is the start of the process.",
+        "b": "Incorrect. This is the 'prepare' phase.",
+        "c": "Correct. Receiving 2t matching 'prepare' messages gives a node confidence that enough other nodes have also seen and agreed upon the same request, so it can commit to it.",
+        "d": "Incorrect. The client's action is the final step, after receiving replies."
+      },
+      "correctAnswer": "c",
+      "difficulty": "advanced"
+    },
+    {
+      "question": "How does PBFT prevent a faulty primary node from causing system failure?",
+      "answers": {
+        "a": "The primary node can never be faulty.",
+        "b": "Backups can initiate a 'view change' protocol to elect a new primary if the current one is suspected to be faulty.",
+        "c": "The client can choose a different primary.",
+        "d": "The system shuts down if the primary is faulty."
+      },
+      "explanations": {
+        "a": "Incorrect. Any node, including the primary, can be faulty.",
+        "b": "Correct. If backup nodes do not receive valid messages from the primary within a certain time, they can trigger a view change to replace the faulty primary with a new one.",
+        "c": "Incorrect. The client does not control the primary election.",
+        "d": "Incorrect. A key goal of BFT is to avoid system shutdown."
+      },
+      "correctAnswer": "b",
+      "difficulty": "advanced"
+    },
+    {
+      "question": "Which of the following real-world systems would have the MOST critical need for Byzantine Fault Tolerance?",
+      "answers": {
+        "a": "A personal blog website.",
+        "b": "A video streaming service.",
+        "c": "An international funds transfer system.",
+        "d": "A collaborative document editor."
+      },
+      "explanations": {
+        "a": "Incorrect. A blog has low stakes if it fails.",
+        "b": "Incorrect. A streaming service can tolerate some failures without catastrophic consequences.",
+        "c": "Correct. Financial systems require the highest level of integrity and trust, as malicious actors have a strong incentive to cheat the system. BFT is crucial to prevent fraudulent transactions.",
+        "d": "Incorrect. While it needs consensus, the risk of malicious actors causing catastrophic failure is lower than in a financial system."
+      },
+      "correctAnswer": "c",
+      "difficulty": "advanced"
     }
   ]
 }
