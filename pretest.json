@@ -1,0 +1,158 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "What is a distributed system?",
+      "answers": {
+        "a": "A single computer with multiple cores.",
+        "b": "A collection of independent computers that appears as a single system.",
+        "c": "A network of computers in the same room.",
+        "d": "A system with a single point of failure."
+      },
+      "explanations": {
+        "a": "Incorrect. While a multi-core computer has multiple processing units, it is not a distributed system.",
+        "b": "Correct. This is the definition of a distributed system.",
+        "c": "Incorrect. While they may be in the same room, the key is that they are independent computers working together.",
+        "d": "Incorrect. Distributed systems are often designed to avoid single points of failure."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which of the following is the most severe type of failure in a distributed system?",
+      "answers": {
+        "a": "Crash failure",
+        "b": "Omission failure",
+        "c": "Timing failure",
+        "d": "Byzantine failure"
+      },
+      "explanations": {
+        "a": "Incorrect. A crash failure is relatively simple to handle.",
+        "b": "Incorrect. An omission failure is when a component fails to send or receive messages.",
+        "c": "Incorrect. A timing failure is when a component's response is outside the expected time.",
+        "d": "Correct. A Byzantine failure is the most severe because the component can behave arbitrarily and maliciously."
+      },
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What is the main goal of the Byzantine Generals' Problem?",
+      "answers": {
+        "a": "To win a battle.",
+        "b": "To achieve consensus among generals, some of whom may be traitors.",
+        "c": "To find the fastest communication path.",
+        "d": "To elect a single leader general."
+      },
+      "explanations": {
+        "a": "Incorrect. While the story is about a battle, the underlying problem is about consensus.",
+        "b": "Correct. The problem illustrates the challenge of reaching agreement in the presence of malicious actors.",
+        "c": "Incorrect. The problem is not about optimizing communication speed.",
+        "d": "Incorrect. While a leader might be part of a solution, the core problem is about consensus."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In the context of the Byzantine Generals' Problem, if there are 'n' generals and 't' traitors, what is the condition to guarantee a solution?",
+      "answers": {
+        "a": "n > t",
+        "b": "n > 2t",
+        "c": "n > 3t",
+        "d": "n = 2t + 1"
+      },
+      "explanations": {
+        "a": "Incorrect. This is not sufficient to handle Byzantine failures.",
+        "b": "Incorrect. This is also not sufficient.",
+        "c": "Correct. A solution is guaranteed only if more than two-thirds of the generals are loyal.",
+        "d": "Incorrect. While related to the number of messages, this is not the condition for solvability."
+      },
+      "correctAnswer": "c",
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "What is Byzantine Fault Tolerance (BFT)?",
+      "answers": {
+        "a": "A system that is tolerant to all types of faults.",
+        "b": "A property of a system that allows it to tolerate Byzantine failures.",
+        "c": "A type of hardware that prevents Byzantine failures.",
+        "d": "A system that can only tolerate crash failures."
+      },
+      "explanations": {
+        "a": "Incorrect. BFT specifically refers to Byzantine failures.",
+        "b": "Correct. BFT enables a system to continue operating correctly even with malicious components.",
+        "c": "Incorrect. BFT is a property of the system's design and algorithms, not specific hardware.",
+        "d": "Incorrect. BFT is designed for the most severe type of failure, not just crash failures."
+      },
+      "correctAnswer": "b",
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "Which of the following is a well-known BFT algorithm?",
+      "answers": {
+        "a": "TCP/IP",
+        "b": "Paxos",
+        "c": "Practical Byzantine Fault Tolerance (PBFT)",
+        "d": "Raft"
+      },
+      "explanations": {
+        "a": "Incorrect. TCP/IP is a communication protocol suite.",
+        "b": "Incorrect. Paxos is a consensus algorithm, but it does not handle Byzantine failures.",
+        "c": "Correct. PBFT is a landmark algorithm for achieving BFT.",
+        "d": "Incorrect. Raft is a consensus algorithm, but it assumes non-malicious failures."
+      },
+      "correctAnswer": "c",
+      "difficulty": "intermediate"
+    },
+    {
+      "question": "In PBFT, how many identical replies must a client receive to accept a result, if there are 't' faulty nodes?",
+      "answers": {
+        "a": "t",
+        "b": "t + 1",
+        "c": "2t",
+        "d": "2t + 1"
+      },
+      "explanations": {
+        "a": "Incorrect. This is not enough to ensure the result is valid.",
+        "b": "Correct. The client needs to receive t+1 identical replies to be sure the result is correct, as at most 't' of them could be from faulty nodes.",
+        "c": "Incorrect. This is the number of prepare messages a node needs to receive.",
+        "d": "Incorrect. This is the number of commit messages a node needs to receive."
+      },
+      "correctAnswer": "b",
+      "difficulty": "advanced"
+    },
+    {
+      "question": "Why are Byzantine failures a major concern in blockchain technology?",
+      "answers": {
+        "a": "Because blockchains are slow.",
+        "b": "Because some participants (miners/validators) may be malicious and try to cheat the system.",
+        "c": "Because blockchains use a lot of electricity.",
+        "d": "Because blockchains are centralized."
+      },
+      "explanations": {
+        "a": "Incorrect. Performance is a concern, but not directly related to Byzantine failures.",
+        "b": "Correct. The decentralized and trustless nature of blockchains requires them to be resilient against malicious actors who might try to double-spend or censor transactions.",
+        "c": "Incorrect. Energy consumption is an issue for some blockchains, but not the reason BFT is needed.",
+        "d": "Incorrect. Blockchains are typically decentralized, which is why they need BFT."
+      },
+      "correctAnswer": "b",
+      "difficulty": "advanced"
+    },
+    {
+      "question": "What happens in a BFT system if the number of faulty nodes 't' is such that n <= 3t?",
+      "answers": {
+        "a": "The system works faster.",
+        "b": "The system can no longer guarantee that it will reach a correct consensus.",
+        "c": "The system automatically adds more nodes.",
+        "d": "The system switches to a different algorithm."
+      },
+      "explanations": {
+        "a": "Incorrect. The system's performance is not the primary issue.",
+        "b": "Correct. If the number of faulty nodes is too high, the loyal nodes cannot be sure to outvote the malicious ones, and consensus cannot be guaranteed.",
+        "c": "Incorrect. The system does not automatically scale in this way.",
+        "d": "Incorrect. The system will fail to reach consensus using its current BFT algorithm."
+      },
+      "correctAnswer": "b",
+      "difficulty": "advanced"
+    }
+  ]
+}

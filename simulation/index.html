@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Byzantine Failures Simulation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>
+                ⚔️ Byzantine Failures Simulation
+                <div class="status-indicator"></div>
+            </h1>
+            <div style="font-size: 0.9em; opacity: 0.9;">
+                Interactive Distributed Consensus Visualization
+            </div>
+        </header>
+
+        <div class="controls-panel">
+            <div class="control-section">
+                <h3>Network Configuration</h3>
+                <div class="input-group">
+                    <label>Number of Nodes</label>
+                    <div class="control-row">
+                        <input type="range" id="nodeCount" class="slider" min="4" max="12" value="7">
+                        <div class="control-value" id="nodeCountValue">7</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Byzantine Nodes</label>
+                    <div class="control-row">
+                        <input type="range" id="faultyCount" class="slider" min="0" max="3" value="1">
+                        <div class="control-value" id="faultyCountValue">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Actions & Controls</h3>
+                <div class="input-group">
+                    <label>Animation Speed</label>
+                    <div class="control-row">
+                        <input type="range" id="animationSpeed" class="slider" min="0.5" max="3" step="0.5" value="1">
+                        <div class="control-value" id="speedValue">1x</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Simulation Mode</label>
+                    <select id="simulationMode">
+                        <option value="manual">Step-by-step (Manual)</option>
+                        <option value="automatic">Automatic</option>
+                    </select>
+                </div>
+
+                <button id="reassignNodes" class="btn btn-warning">🎯 Reassign Nodes</button>
+
+                <!-- Manual Controls -->
+                <div id="manualControls">
+                    <button id="nextStepBtn" class="btn btn-primary">➡️ Next Step</button>
+                </div>
+
+                <!-- Automatic Controls -->
+                <div id="automaticControls" style="display: none;">
+                    <button id="startConsensus" class="btn btn-secondary">🚀 Start Consensus</button>
+                </div>
+                
+                <button id="resetNetwork" class="btn btn-danger">🔄 Reset Network</button>
+            </div>
+        </div>
+
+        <div class="experiment-area">
+            <div class="simulation-area">
+                <button class="info-button" onclick="toggleInfoModal()" title="Click for feature guide">
+                    ℹ️
+                </button>
+                <div class="legend-panel">
+                    <h4>Node Types</h4>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <div class="legend-color leader"></div>
+                            <span>Leader Node</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color honest"></div>
+                            <span>Honest Node</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color byzantine"></div>
+                            <span>Byzantine Node</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="phaseIndicator" class="phase-indicator">Ready</div>
+                <canvas id="networkCanvas" class="byzantine-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="observations-panel">
+            <div class="status-section">
+                <h4>Activity Logs</h4>
+                <div class="logs" id="logs">
+                    <div class="log-entry message">[System] Byzantine Failures Simulation initialized</div>
+                    <div class="log-entry message">[Info] Click 'Start Consensus' to begin Byzantine agreement protocol</div>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h4>System Status</h4>
+                <div class="stat-card">
+                    <div class="stat-value" id="networkStatus">Ready</div>
+                    <div class="stat-label">Network Status</div>
+                    <div class="stat-description">Current system state</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value" id="consensusRound">0</div>
+                    <div class="stat-label">Consensus Round</div>
+                    <div class="stat-description">Number of consensus attempts</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value" id="messageCount">0</div>
+                    <div class="stat-label">Messages Sent</div>
+                    <div class="stat-description">Total network messages</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value" id="currentPhase">Idle</div>
+                    <div class="stat-label">Current Phase</div>
+                    <div class="stat-description">Consensus protocol phase</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value" id="byzantineTolerance">f=1 < 2 (Safe)</div>
+                    <div class="stat-label">Byzantine Tolerance</div>
+                    <div class="stat-description">Fault tolerance check</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Portrait Orientation Overlay - Only shown on very small landscape screens -->
+    <div class="rotate-device-overlay">
+        <div class="rotate-icon">📱↔️</div>
+        <h2>Screen Too Small</h2>
+        <p>Please use a device with a larger screen or rotate to portrait mode for a better viewing experience.</p>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="info-modal" onclick="closeInfoModal(event)">
+        <div class="info-modal-content" onclick="event.stopPropagation()">
+            <div class="info-modal-header">
+                <h2>⚔️ Byzantine Failures Feature Guide</h2>
+                <button class="close-button" onclick="closeInfoModal()">&times;</button>
+            </div>
+            <div class="info-modal-body">
+                <div class="feature-section">
+                    <h3>🔧 Network Configuration</h3>
+                    <ul>
+                        <li><strong>Number of Nodes:</strong> Total nodes in the network (4-12). More nodes demonstrate scalability but increase complexity.</li>
+                        <li><strong>Byzantine Nodes:</strong> Number of malicious/faulty nodes. Automatically limited to maintain fault tolerance (f < n/3).</li>
+                        <li><strong>Byzantine Fault Tolerance Rule:</strong> For n nodes, maximum faulty nodes f ≤ ⌊(n-1)/3⌋. This ensures honest majority.</li>
+                        <li><strong>Recommended:</strong> Start with 7 nodes and 1-2 Byzantine nodes to see clear behavior differences.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>🎮 Actions & Controls</h3>
+                    <ul>
+                        <li><strong>Animation Speed:</strong> Controls how fast messages move and phases transition (0.5x to 3x speed).</li>
+                        <li><strong>Simulation Mode:</strong>
+                            <ul>
+                                <li><em>Step-by-step (Manual):</em> Click "Next Step" to manually progress through each consensus phase</li>
+                                <li><em>Automatic:</em> Watch the full consensus process run automatically</li>
+                            </ul>
+                        </li>
+                        <li><strong>Reassign Nodes:</strong> Randomly shuffles which nodes are Byzantine, honest, or leader without changing total counts.</li>
+                        <li><strong>Reset Network:</strong> Stops current consensus and reinitializes the entire network.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>🔍 Understanding Node Types</h3>
+                    <ul>
+                        <li><strong>� Leader Node (Gold):</strong> Initiates consensus by proposing a value (Pre-Prepare phase). Must be an honest node.</li>
+                        <li><strong>� Honest Node (Green):</strong> Follows the PBFT protocol correctly, validates messages, and helps achieve consensus.</li>
+                        <li><strong>� Byzantine Node (Red):</strong> Malicious node that may send conflicting messages, lie, or remain silent to disrupt consensus.</li>
+                        <li><strong>Node Values:</strong> Each node starts with a random binary value (0 or 1) that they want the network to agree on.</li>
+                        <li><strong>Message Types:</strong> Pre-Prepare (leader proposal), Prepare (replica validation), Commit (final agreement).</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>📋 PBFT Consensus Protocol</h3>
+                    <p>This simulation implements the <strong>Practical Byzantine Fault Tolerance (PBFT)</strong> consensus algorithm with three distinct phases:</p>
+                    <ol>
+                        <li><strong>Phase 1 - Pre-Prepare:</strong>
+                            <ul>
+                                <li>Leader broadcasts a pre-prepare message with the proposed value to all replica nodes</li>
+                                <li>All replicas receive the same proposal from the leader</li>
+                                <li>This establishes the initial proposal for this consensus round</li>
+                            </ul>
+                        </li>
+                        <li><strong>Phase 2 - Prepare:</strong>
+                            <ul>
+                                <li>Each replica broadcasts prepare messages to all other nodes (including the leader)</li>
+                                <li>Honest replicas send prepare messages with the leader's proposed value</li>
+                                <li>Byzantine replicas may send conflicting prepare messages or stay silent</li>
+                                <li>Nodes collect prepare messages to verify network agreement on the proposal</li>
+                            </ul>
+                        </li>
+                        <li><strong>Phase 3 - Commit:</strong>
+                            <ul>
+                                <li>Nodes that received ≥ 2f+1 prepare messages (including leader's implicit prepare) enter commit phase</li>
+                                <li>These nodes broadcast commit messages for the agreed value</li>
+                                <li>Byzantine nodes may send conflicting commits or remain silent</li>
+                                <li>Final consensus is reached when nodes receive ≥ 2f+1 commit messages</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p><strong>Safety Guarantee:</strong> All honest nodes that commit will commit the same value, even with up to f Byzantine nodes (where f < n/3).</p>
+                </div>
+
+                <div class="feature-section">
+                    <h3>🎯 Simulation Modes Explained</h3>
+                    <ul>
+                        <li><strong>Manual Mode Benefits:</strong>
+                            <ul>
+                                <li>Step through each phase at your own pace</li>
+                                <li>Read detailed logs for each action</li>
+                                <li>Perfect for learning the protocol step-by-step</li>
+                                <li>Watch message animations carefully</li>
+                            </ul>
+                        </li>
+                        <li><strong>Automatic Mode Benefits:</strong>
+                            <ul>
+                                <li>See the full consensus process flow</li>
+                                <li>Observe timing and synchronization</li>
+                                <li>Good for demonstrating the complete algorithm</li>
+                                <li>Useful for testing multiple consensus rounds quickly</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>📊 Understanding the Visualization</h3>
+                    <ul>
+                        <li><strong>Node Circles:</strong> Color indicates node type, size shows activity level</li>
+                        <li><strong>Node Labels:</strong> Show node ID and current value (0 or 1)</li>
+                        <li><strong>Message Lines:</strong> Blue lines show messages traveling between nodes</li>
+                        <li><strong>Node Connections:</strong> Thin gray lines show network topology (all nodes can communicate)</li>
+                        <li><strong>Pulsing Effect:</strong> Active nodes pulse during message sending/receiving</li>
+                        <li><strong>Phase Indicator:</strong> Top-left shows current consensus phase</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>📈 Statistics Panel Explained</h3>
+                    <ul>
+                        <li><strong>Network Status:</strong> Current state (Ready, Running, Consensus Reached, etc.)</li>
+                        <li><strong>Consensus Round:</strong> How many consensus attempts have been made</li>
+                        <li><strong>Messages Sent:</strong> Total network communication overhead</li>
+                        <li><strong>Current Phase:</strong> Which step of the consensus protocol is active</li>
+                        <li><strong>Byzantine Tolerance:</strong> Shows the fault tolerance formula and safety status</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>🎯 Recommended Experiments</h3>
+                    <ol>
+                        <li><strong>Basic Consensus:</strong>
+                            <ul>
+                                <li>Start with 7 nodes, 1 Byzantine node</li>
+                                <li>Use manual mode to step through one complete consensus</li>
+                                <li>Observe how Byzantine node behaves differently</li>
+                            </ul>
+                        </li>
+                        <li><strong>Fault Tolerance Testing:</strong>
+                            <ul>
+                                <li>Gradually increase Byzantine nodes until f = ⌊(n-1)/3⌋</li>
+                                <li>Observe how consensus becomes harder with more faults</li>
+                                <li>Try to exceed the fault tolerance limit</li>
+                            </ul>
+                        </li>
+                        <li><strong>Network Size Scaling:</strong>
+                            <ul>
+                                <li>Compare consensus with 4 vs 12 nodes</li>
+                                <li>Observe message count and consensus time</li>
+                                <li>See how fault tolerance scales with network size</li>
+                            </ul>
+                        </li>
+                        <li><strong>Byzantine Behavior Analysis:</strong>
+                            <ul>
+                                <li>Use "Reassign Nodes" to change which nodes are Byzantine</li>
+                                <li>Run multiple rounds to see varying Byzantine tactics</li>
+                                <li>Compare outcomes with different Byzantine node configurations</li>
+                            </ul>
+                        </li>
+                        <li><strong>Manual vs Automatic:</strong>
+                            <ul>
+                                <li>First run in manual mode to understand each step</li>
+                                <li>Then switch to automatic to see full flow</li>
+                                <li>Adjust animation speed to match your learning pace</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="feature-section">
+                    <h3>🔍 What to Watch For</h3>
+                    <ul>
+                        <li><strong>Message Patterns:</strong> Notice how Byzantine nodes may send different messages to different recipients</li>
+                        <li><strong>Consensus Success:</strong> Despite Byzantine interference, honest majority should reach agreement</li>
+                        <li><strong>Fault Tolerance Limits:</strong> Consensus fails when f ≥ n/3 (too many Byzantine nodes)</li>
+                        <li><strong>Leader Behavior:</strong> Leader must be honest - observe what happens during leader proposal</li>
+                        <li><strong>Vote Counting:</strong> Final decision based on majority of honest nodes, not all nodes</li>
+                        <li><strong>Network Resilience:</strong> System continues working despite presence of malicious actors</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>⚠️ Common Misconceptions</h3>
+                    <ul>
+                        <li><strong>❌ "More nodes = more security":</strong> Security depends on the ratio f < n/3, not absolute numbers</li>
+                        <li><strong>❌ "Byzantine nodes are just offline":</strong> Byzantine faults are worse - they actively mislead</li>
+                        <li><strong>❌ "Majority of all nodes needed":</strong> Only majority of honest nodes needed for consensus</li>
+                        <li><strong>❌ "Leader can be Byzantine":</strong> Leader is always chosen from honest nodes in this simulation</li>
+                        <li><strong>✅ Understanding:</strong> This simulation demonstrates the fundamental challenge of reaching agreement in the presence of malicious actors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+<script src="../assets/js/iframeResize.js"></script>
+        
+        </body>
+</html>

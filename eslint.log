@@ -1,0 +1,7 @@
+
+/home/runner/work/exp-byzantine-failures-scenario-iiith/exp-byzantine-failures-scenario-iiith/experiment/simulation/script.js
+  169:54  warning  'index' is defined but never used                 no-unused-vars
+  398:21  warning  'messageType' is assigned a value but never used  no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+
