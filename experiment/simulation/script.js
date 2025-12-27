@@ -38,15 +38,42 @@ class ByzantineSimulation {
 
     setupCanvas() {
         this.resizeCanvas();
+        // Debounced resize handler for better performance
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            this.resizeCanvas();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.resizeCanvas();
+            }, 100);
+        });
+        // Handle orientation change on mobile
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                this.resizeCanvas();
+            }, 200);
         });
     }
 
     resizeCanvas() {
         const container = document.querySelector('.simulation-area');
-        this.canvas.width = container.clientWidth - 40;
-        this.canvas.height = container.clientHeight - 40;
+        if (!container) return;
+        
+        // Get computed styles to account for padding
+        const computedStyle = getComputedStyle(container);
+        const paddingX = parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight);
+        const paddingY = parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom);
+        
+        // Calculate available space
+        const availableWidth = container.clientWidth - paddingX;
+        const availableHeight = container.clientHeight - paddingY;
+        
+        // Set minimum dimensions for mobile
+        const minWidth = 280;
+        const minHeight = 200;
+        
+        this.canvas.width = Math.max(availableWidth, minWidth);
+        this.canvas.height = Math.max(availableHeight, minHeight);
+        
         this.positionNodes();
     }
 
@@ -169,10 +196,14 @@ class ByzantineSimulation {
     positionNodes() {
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
-        const radius = Math.min(this.canvas.width, this.canvas.height) * 0.3;
+        
+        // Responsive radius calculation with minimum padding
+        const padding = Math.min(50, Math.min(this.canvas.width, this.canvas.height) * 0.15);
+        const maxRadius = (Math.min(this.canvas.width, this.canvas.height) / 2) - padding;
+        const radius = Math.max(60, Math.min(maxRadius, Math.min(this.canvas.width, this.canvas.height) * 0.35));
 
         this.nodes.forEach((node, index) => {
-            const angle = (index * 2 * Math.PI) / this.nodes.length;
+            const angle = (index * 2 * Math.PI) / this.nodes.length - Math.PI / 2; // Start from top
             node.position.x = centerX + radius * Math.cos(angle);
             node.position.y = centerY + radius * Math.sin(angle);
         });
@@ -911,8 +942,12 @@ class ByzantineSimulation {
     }
 
     drawConnections() {
-        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
-        this.ctx.lineWidth = 2;
+        // Responsive line width based on canvas size
+        const canvasMin = Math.min(this.canvas.width, this.canvas.height);
+        const lineWidth = Math.max(1, Math.min(2, canvasMin * 0.005));
+        
+        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+        this.ctx.lineWidth = lineWidth;
 
         for (let i = 0; i < this.nodes.length; i++) {
             for (let j = i + 1; j < this.nodes.length; j++) {
@@ -934,6 +969,11 @@ class ByzantineSimulation {
     }
 
     drawMessages() {
+        // Calculate responsive message size based on canvas size
+        const canvasMin = Math.min(this.canvas.width, this.canvas.height);
+        const messageRadius = Math.max(5, Math.min(8, canvasMin * 0.02));
+        const messageFontSize = Math.max(8, Math.min(12, canvasMin * 0.03));
+        
         this.messages.forEach(message => {
             const fromNode = this.nodes[message.from];
             const toNode = this.nodes[message.to];
@@ -942,26 +982,32 @@ class ByzantineSimulation {
             const y = fromNode.position.y + (toNode.position.y - fromNode.position.y) * message.progress;
             
             this.ctx.beginPath();
-            this.ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            this.ctx.arc(x, y, messageRadius, 0, 2 * Math.PI);
             this.ctx.fillStyle = message.type === 'proposal' ? '#3b82f6' : '#10b981';
             this.ctx.fill();
             this.ctx.strokeStyle = 'white';
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = Math.max(1, messageRadius * 0.25);
             this.ctx.stroke();
             
             // Draw value
             this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 12px Arial';
+            this.ctx.font = `bold ${messageFontSize}px Arial`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(message.value.toString(), x, y + 4);
+            this.ctx.fillText(message.value.toString(), x, y + (messageFontSize * 0.35));
         });
     }
 
     drawNodes() {
+        // Calculate responsive node size based on canvas size
+        const canvasMin = Math.min(this.canvas.width, this.canvas.height);
+        const baseRadius = Math.max(18, Math.min(30, canvasMin * 0.06));
+        const baseFontSize = Math.max(10, Math.min(16, canvasMin * 0.035));
+        const smallFontSize = Math.max(8, Math.min(10, canvasMin * 0.025));
+        
         this.nodes.forEach(node => {
             const x = node.position.x;
             const y = node.position.y;
-            const radius = 30 + (node.pulse * 10);
+            const radius = baseRadius + (node.pulse * 8);
             
             // Node colors based on type
             let color;
@@ -978,31 +1024,31 @@ class ByzantineSimulation {
             this.ctx.fillStyle = color;
             this.ctx.fill();
             this.ctx.strokeStyle = this.darkenColor(color, 0.2);
-            this.ctx.lineWidth = 3;
+            this.ctx.lineWidth = Math.max(2, baseRadius * 0.1);
             this.ctx.stroke();
             
             // Draw node ID
             this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 16px Arial';
+            this.ctx.font = `bold ${baseFontSize}px Arial`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(node.id.toString(), x, y - 5);
+            this.ctx.fillText(node.id.toString(), x, y - (baseRadius * 0.15));
             
             // Draw node information based on phase
-            this.ctx.font = 'bold 10px Arial';
+            this.ctx.font = `bold ${smallFontSize}px Arial`;
             if (this.currentPhase === 'idle' || node.phase === 'idle') {
                 // Initially show nothing (just node number)
             } else if (this.currentPhase === 'pre-prepare' && node.receivedValue !== null) {
                 // After pre-prepare phase, show what they received
-                this.ctx.fillText(`R:${node.receivedValue}`, x, y + 8);
+                this.ctx.fillText(`R:${node.receivedValue}`, x, y + (baseRadius * 0.3));
             } else if (this.currentPhase === 'prepare' && node.sentValue !== null) {
                 // During/after prepare phase, show received and sent values
-                this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + 8);
+                this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + (baseRadius * 0.3));
             } else if (this.currentPhase === 'commit') {
                 // During commit phase, show the full story
                 if (node.receivedValue !== null && node.sentValue !== null) {
-                    this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + 8);
+                    this.ctx.fillText(`R:${node.receivedValue} S:${node.sentValue}`, x, y + (baseRadius * 0.3));
                 } else if (node.receivedValue !== null) {
-                    this.ctx.fillText(`R:${node.receivedValue}`, x, y + 8);
+                    this.ctx.fillText(`R:${node.receivedValue}`, x, y + (baseRadius * 0.3));
                 }
             }
             
@@ -1119,29 +1165,43 @@ window.toggleInfoModal = toggleInfoModal;
 window.openInfoModal = openInfoModal;
 window.closeInfoModal = closeInfoModal;
 
-// Orientation detection for mobile devices
+// Orientation detection for mobile devices - now handled by CSS media queries
+// This function only handles dynamic layout adjustments
 function checkOrientation() {
-    const overlay = document.querySelector('.rotate-device-overlay');
-    if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
-        // Portrait mode on mobile
-        overlay.style.display = 'flex !important';
-        document.querySelector('.app-container').style.display = 'none !important';
-    } else {
-        // Landscape mode or desktop
-        overlay.style.display = 'none';
-        document.querySelector('.app-container').style.display = 'grid';
+    const appContainer = document.querySelector('.app-container');
+    const isVerySmallLandscape = window.innerHeight < 400 && window.innerWidth > window.innerHeight;
+    
+    if (isVerySmallLandscape) {
+        // Very small landscape - CSS will show overlay
+        return;
+    }
+    
+    // For all other cases, ensure app container uses proper display
+    // CSS handles the grid/flex layout based on screen size
+    if (appContainer) {
+        // Remove any inline styles that might override CSS
+        appContainer.style.removeProperty('display');
     }
 }
 
 // Initialize simulation when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new ByzantineSimulation();
+    const simulation = new ByzantineSimulation();
+    
+    // Make simulation globally accessible for debugging if needed
+    window.byzantineSimulation = simulation;
     
     // Set up orientation detection
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', () => {
         setTimeout(checkOrientation, 100); // Small delay for orientation change
+        // Trigger canvas resize after orientation change
+        setTimeout(() => {
+            if (window.byzantineSimulation) {
+                window.byzantineSimulation.resizeCanvas();
+            }
+        }, 300);
     });
 
     // Keyboard shortcuts for info modal
