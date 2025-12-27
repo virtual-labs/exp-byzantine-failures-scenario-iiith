@@ -9,7 +9,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #1a202c;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .app-container {
@@ -461,10 +462,11 @@
         .byzantine-canvas {
             width: 100%;
             height: 100%;
-            min-height: 500px;
+            min-height: 400px;
             border-radius: 10px;
             background: white;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+            touch-action: manipulation;
         }
 
         .legend-item {
@@ -681,52 +683,213 @@
 
         /* Mobile Landscape Support - Phones */
         @media screen and (max-width: 768px) and (orientation: landscape) {
+            body {
+                overflow-y: auto;
+            }
+
             .app-container {
-                grid-template-columns: 280px 1fr 300px;
-                grid-template-rows: 60px 1fr;
+                grid-template-columns: 250px 1fr 280px;
+                grid-template-rows: 50px 1fr;
                 height: 100vh;
                 gap: 8px;
                 padding: 8px;
                 overflow: hidden;
+                border-radius: 0;
             }
 
             .header {
                 grid-column: 1 / -1;
-                padding: 0 15px;
+                padding: 0 12px;
+                border-radius: 10px;
             }
 
             .header h1 {
-                font-size: 1.4em;
+                font-size: 1.1em;
+            }
+
+            .header > div:last-child {
+                display: none;
             }
 
             .controls-panel {
-                height: calc(100vh - 76px);
-                padding: 15px;
-                gap: 15px;
+                height: calc(100vh - 66px);
+                padding: 10px;
+                gap: 10px;
+                border-radius: 10px;
             }
 
             .control-section {
-                padding: 15px;
+                padding: 10px;
+                border-radius: 10px;
             }
 
             .control-section h3 {
+                font-size: 0.85em;
+                margin-bottom: 8px;
+            }
+
+            .control-section h3::before {
                 font-size: 1em;
-                margin-bottom: 12px;
             }
 
             .input-group {
-                padding: 12px;
-                margin-bottom: 15px;
+                padding: 8px;
+                margin-bottom: 10px;
+            }
+
+            .input-group label {
+                font-size: 0.75rem;
+                margin-bottom: 5px;
             }
 
             .btn {
-                padding: 10px 12px;
+                padding: 8px 10px;
+                font-size: 0.75rem;
+                margin-bottom: 5px;
+            }
+
+            .experiment-area {
+                height: calc(100vh - 66px);
+                border-radius: 10px;
+            }
+
+            .simulation-area {
+                padding: 10px;
+            }
+
+            .byzantine-canvas {
+                min-height: 280px;
+            }
+
+            .legend-panel {
+                padding: 8px;
+                min-width: 130px;
+                font-size: 0.7rem;
+                top: 10px;
+                right: 10px;
+                border-radius: 8px;
+            }
+
+            .legend-panel h4 {
+                font-size: 0.75rem;
+                margin-bottom: 6px;
+            }
+
+            .legend-item {
+                font-size: 0.65rem;
+                gap: 5px;
+            }
+
+            .legend-color {
+                width: 10px;
+                height: 10px;
+            }
+
+            .phase-indicator {
+                font-size: 0.75rem;
+                padding: 6px 10px;
+                top: 10px;
+                left: 10px;
+            }
+
+            .info-button {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                top: 10px;
+                right: 150px;
+            }
+
+            .observations-panel {
+                height: calc(100vh - 66px);
+                padding: 10px;
+                gap: 8px;
+                border-radius: 10px;
+            }
+
+            .status-section {
+                padding: 8px;
+                border-radius: 8px;
+            }
+
+            .status-section h4 {
                 font-size: 0.8rem;
                 margin-bottom: 6px;
             }
 
+            .stat-card {
+                padding: 8px;
+                margin-bottom: 6px;
+                border-radius: 8px;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .stat-description {
+                font-size: 0.55rem;
+            }
+
+            .logs {
+                height: 180px;
+                font-size: 0.65rem;
+                padding: 8px;
+            }
+
+            .log-entry {
+                padding: 4px 6px;
+                font-size: 0.6rem;
+            }
+
+            select {
+                padding: 6px 8px;
+                font-size: 0.75rem;
+            }
+
+            .slider::-webkit-slider-thumb {
+                width: 16px;
+                height: 16px;
+            }
+
+            .control-value {
+                font-size: 0.75rem;
+                padding: 2px 6px;
+                min-width: 32px;
+            }
+        }
+
+        /* Mobile Landscape Support - Tablets */
+        @media screen and (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+            .app-container {
+                grid-template-columns: 280px 1fr 300px;
+                grid-template-rows: 65px 1fr;
+                gap: 10px;
+                padding: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                border-radius: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .controls-panel {
+                height: calc(100vh - 85px);
+                padding: 15px;
+                border-radius: 12px;
+            }
+
             .experiment-area {
-                height: calc(100vh - 76px);
+                height: calc(100vh - 85px);
+                border-radius: 12px;
             }
 
             .simulation-area {
@@ -737,50 +900,295 @@
                 min-height: 350px;
             }
 
-            .legend-panel {
+            .observations-panel {
+                height: calc(100vh - 85px);
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .logs {
+                height: 200px;
+            }
+        }
+
+        /* Tablet Portrait Mode */
+        @media screen and (min-width: 601px) and (max-width: 1024px) and (orientation: portrait) {
+            body {
+                overflow-y: auto;
+            }
+
+            .app-container {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 70px auto auto auto;
+                height: auto;
+                min-height: 100vh;
+                gap: 12px;
                 padding: 12px;
-                min-width: 160px;
-                font-size: 0.8rem;
+                border-radius: 0;
+                overflow: visible;
             }
 
-            .legend-panel h4 {
-                font-size: 0.85rem;
-                margin-bottom: 10px;
+            .header {
+                grid-column: 1 / -1;
+                border-radius: 12px;
+                padding: 0 15px;
             }
 
-            .legend-item {
-                font-size: 0.75rem;
-                gap: 8px;
+            .header h1 {
+                font-size: 1.4em;
             }
 
-            .legend-color {
-                width: 12px;
-                height: 12px;
+            .controls-panel {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3;
+                height: auto;
+                max-height: none;
+                border-radius: 12px;
             }
 
-            .phase-indicator {
-                font-size: 0.85rem;
-                padding: 10px 15px;
+            .experiment-area {
+                grid-column: 2 / 3;
+                grid-row: 2 / 4;
+                min-height: 450px;
+                border-radius: 12px;
             }
 
             .observations-panel {
-                height: calc(100vh - 76px);
-                padding: 15px;
+                grid-column: 1 / 2;
+                grid-row: 3 / 4;
+                height: auto;
+                max-height: none;
+                border-radius: 12px;
+            }
+
+            .byzantine-canvas {
+                min-height: 400px;
+            }
+
+            .logs {
+                height: 200px;
+            }
+        }
+
+        /* Large Desktop */
+        @media (min-width: 1400px) {
+            .app-container {
+                grid-template-columns: 350px 1fr 400px;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .controls-panel {
+                padding: 25px;
+            }
+
+            .observations-panel {
+                padding: 25px;
+            }
+        }
+
+        /* Standard Desktop/Laptop adjustments */
+        @media (max-width: 1200px) and (min-width: 1025px) {
+            .app-container {
+                grid-template-columns: 280px 1fr 320px;
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.7em;
+            }
+        }
+
+        /* Mobile Portrait Mode - Full Responsive Layout */
+        @media screen and (max-width: 600px) and (orientation: portrait) {
+            body {
+                overflow-y: auto;
+                min-height: 100vh;
+            }
+
+            .app-container {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+                gap: 10px;
+                padding: 10px;
+                border-radius: 0;
+                overflow: visible;
+            }
+
+            .header {
+                flex-shrink: 0;
+                min-height: 60px;
+                padding: 10px 15px;
+                border-radius: 12px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.2em;
+                flex-wrap: wrap;
+            }
+
+            .header > div:last-child {
+                font-size: 0.75em !important;
+            }
+
+            .experiment-area {
+                order: 1;
+                flex-shrink: 0;
+                min-height: 350px;
+                height: 350px;
+                border-radius: 12px;
+            }
+
+            .simulation-area {
+                padding: 10px;
+                position: relative;
+            }
+
+            .byzantine-canvas {
+                min-height: 280px;
+                height: 100%;
+            }
+
+            .legend-panel {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                padding: 8px 10px;
+                min-width: 120px;
+                border-radius: 8px;
+                font-size: 0.7rem;
+            }
+
+            .legend-panel h4 {
+                font-size: 0.75rem;
+                margin-bottom: 6px;
+            }
+
+            .legend-panel h4::before {
+                font-size: 0.85em;
+            }
+
+            .legend-item {
+                font-size: 0.65rem;
+                gap: 6px;
+            }
+
+            .legend-color {
+                width: 10px;
+                height: 10px;
+            }
+
+            .phase-indicator {
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                font-size: 0.75rem;
+                padding: 6px 10px;
+                border-radius: 6px;
+            }
+
+            .info-button {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                top: auto;
+                bottom: 8px;
+                right: 8px;
+            }
+
+            .controls-panel {
+                order: 2;
+                flex-shrink: 0;
+                height: auto;
+                max-height: none;
+                padding: 12px;
+                border-radius: 12px;
+                gap: 12px;
+            }
+
+            .control-section {
+                padding: 12px;
+                border-radius: 10px;
+            }
+
+            .control-section h3 {
+                font-size: 0.95em;
+                margin-bottom: 10px;
+            }
+
+            .input-group {
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+
+            .input-group label {
+                font-size: 0.8rem;
+            }
+
+            .btn {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+                margin-bottom: 8px;
+                min-height: 44px;
+            }
+
+            select {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+                min-height: 44px;
+            }
+
+            .slider {
+                height: 10px;
+            }
+
+            .slider::-webkit-slider-thumb {
+                width: 24px;
+                height: 24px;
+            }
+
+            .slider::-moz-range-thumb {
+                width: 24px;
+                height: 24px;
+            }
+
+            .control-value {
+                font-size: 0.85rem;
+                padding: 4px 8px;
+            }
+
+            .observations-panel {
+                order: 3;
+                flex-shrink: 0;
+                height: auto;
+                max-height: none;
+                padding: 12px;
+                border-radius: 12px;
                 gap: 12px;
             }
 
             .status-section {
                 padding: 12px;
+                border-radius: 10px;
             }
 
             .status-section h4 {
-                font-size: 0.9rem;
+                font-size: 0.95em;
                 margin-bottom: 10px;
             }
 
             .stat-card {
                 padding: 12px;
                 margin-bottom: 10px;
+                border-radius: 10px;
             }
 
             .stat-value {
@@ -796,98 +1204,138 @@
             }
 
             .logs {
-                height: 250px;
+                height: 200px;
                 font-size: 0.75rem;
-                padding: 12px;
+                padding: 10px;
             }
 
             .log-entry {
-                padding: 5px 8px;
+                padding: 6px 8px;
                 font-size: 0.7rem;
+                margin: 3px 0;
+            }
+
+            /* Mobile-friendly stat cards grid */
+            .status-section:last-child {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .status-section:last-child h4 {
+                grid-column: 1 / -1;
+            }
+
+            .status-section:last-child .stat-card {
+                margin-bottom: 0;
+            }
+
+            .status-section:last-child .stat-card:last-child {
+                grid-column: 1 / -1;
             }
         }
 
-        /* Mobile Landscape Support - Tablets */
-        @media screen and (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-            .app-container {
-                grid-template-columns: 300px 1fr 320px;
-                grid-template-rows: 70px 1fr;
-                gap: 12px;
-                padding: 12px;
-            }
-
+        /* Extra small phones */
+        @media screen and (max-width: 380px) and (orientation: portrait) {
             .header h1 {
-                font-size: 1.6em;
-            }
-
-            .controls-panel {
-                height: calc(100vh - 94px);
-                padding: 18px;
+                font-size: 1em;
             }
 
             .experiment-area {
-                height: calc(100vh - 94px);
-            }
-
-            .simulation-area {
-                padding: 18px;
+                min-height: 300px;
+                height: 300px;
             }
 
             .byzantine-canvas {
-                min-height: 400px;
+                min-height: 240px;
             }
 
-            .observations-panel {
-                height: calc(100vh - 94px);
-                padding: 18px;
+            .legend-panel {
+                min-width: 100px;
+                padding: 6px 8px;
             }
 
-            .logs {
-                height: 280px;
+            .legend-panel h4 {
+                font-size: 0.7rem;
             }
-        }
 
-        @media (max-width: 1200px) {
-            .app-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: 80px 1fr auto auto;
-                height: 100vh;
-                gap: 10px;
-                padding: 10px;
+            .legend-item {
+                font-size: 0.6rem;
             }
-            
-            .controls-panel {
-                height: 300px;
-                order: 2;
-            }
-            
-            .experiment-area {
-                order: 1;
-                min-height: 400px;
-            }
-            
-            .observations-panel {
-                height: 250px;
-                order: 3;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.5em;
-            }
-            
-            .input-group {
-                padding: 12px;
-            }
-            
+
             .btn {
-                padding: 8px 12px;
-                font-size: 12px;
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1rem;
             }
         }
-        
-        /* Mobile Portrait Orientation Overlay */
+
+        /* Info Modal Responsive */
+        @media screen and (max-width: 768px) {
+            .info-modal-content {
+                width: 95%;
+                max-height: 85vh;
+                border-radius: 15px;
+            }
+
+            .info-modal-header {
+                padding: 15px 18px;
+            }
+
+            .info-modal-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .feature-section {
+                padding: 15px 18px;
+            }
+
+            .feature-section h3 {
+                font-size: 1rem;
+            }
+
+            .feature-section li {
+                font-size: 0.85rem;
+            }
+
+            .feature-section ul ul li {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .info-modal-content {
+                width: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .info-modal-header {
+                padding: 12px 15px;
+            }
+
+            .info-modal-header h2 {
+                font-size: 1rem;
+            }
+
+            .feature-section {
+                padding: 12px 15px;
+            }
+
+            .feature-section h3 {
+                font-size: 0.95rem;
+            }
+
+            .feature-section li {
+                font-size: 0.8rem;
+                line-height: 1.4;
+            }
+        }
+
+        /* Rotate device overlay - Only for very small landscape screens */
         .rotate-device-overlay {
             display: none;
             position: fixed;
@@ -930,12 +1378,108 @@
             75% { transform: rotate(15deg); }
         }
 
-        @media screen and (max-width: 768px) and (orientation: portrait) {
+        /* Show rotate overlay only for very small landscape screens where layout breaks */
+        @media screen and (max-height: 400px) and (orientation: landscape) {
             .rotate-device-overlay {
                 display: flex !important;
             }
             
             .app-container {
                 display: none !important;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 44px;
+            }
+
+            select {
+                min-height: 44px;
+            }
+
+            .slider::-webkit-slider-thumb {
+                width: 28px;
+                height: 28px;
+            }
+
+            .slider::-moz-range-thumb {
+                width: 28px;
+                height: 28px;
+            }
+
+            .info-button {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+
+            .close-button {
+                width: 44px;
+                height: 44px;
+                font-size: 28px;
+            }
+
+            .btn:hover {
+                transform: none;
+            }
+
+            .stat-card:hover {
+                transform: none;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .app-container {
+                border: 2px solid #000;
+            }
+
+            .btn {
+                border: 2px solid #000;
+            }
+
+            .control-section {
+                border: 1px solid #000;
+            }
+
+            .stat-card {
+                border: 1px solid #000;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+
+            .header .status-indicator {
+                animation: none;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .app-container {
+                display: block;
+                height: auto;
+                box-shadow: none;
+            }
+
+            .controls-panel,
+            .info-button,
+            .rotate-device-overlay {
+                display: none !important;
+            }
+
+            .experiment-area {
+                page-break-inside: avoid;
             }
         }
